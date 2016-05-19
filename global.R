@@ -5,13 +5,20 @@
 #May 13, 2016
 # Libraries
 library(RCurl)
+library(curl)
 library(datasets)
 library(dplyr)
-library(ggplot2)
 library(jsonlite)
 library(leaflet)
+library(rjson)
 library(shiny)
 library(zipcode)
+
+# Get External IP address information
+ipInfo = getURL("ipinfo.io/loc")
+loc <- gsub("[\n]","",ipInfo)
+homeLat <- strsplit(loc, ",")[[1]][1]
+homeLong <- strsplit(loc, ",")[[1]][2]
 
 # Zipcode, state, city data
 data("zipcode")

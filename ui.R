@@ -14,7 +14,7 @@ header <- dashboardHeader(
 body <- dashboardBody(
   fluidRow(
     column(width = 9,
-           box(width = NULL, solidHeader = TRUE,
+           box(width = NULL, solidHeader = TRUE, status = "warning",
                leafletOutput("m", height = 500)
            )
     ),

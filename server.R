@@ -34,12 +34,19 @@ shinyServer(function(input, output, session) {
   output$m <- renderLeaflet({
     cols <- rainbow(length(levels(afs$Fuel.Type.Code)), alpha = NULL)
     afs$colors <- cols[unclass(afs$Fuel.Type.Code)]
-    leaflet()  %>%
-      addTiles() %>%
-      setView(lng = getCenter()$Longitude, lat = getCenter()$Latitude, zoom = 12) %>%
-      addCircleMarkers(data = afs, lat = ~ Latitude, lng = ~ Longitude, popup = ~Station.Name, color = ~colors) %>%
-      addLegend(position = "bottomright", labels = fuel_types, colors = cols)
-  })
+    if (input$refresh[1] == 0) {
+      leaflet()  %>%
+        addTiles() %>%
+        setView(lng = homeLong, lat = homeLat, zoom = 15) %>%
+        addCircleMarkers(data = afs, lat = ~ Latitude, lng = ~ Longitude, popup = ~Station.Name, color = ~colors) %>%
+        addLegend(position = "bottomright", labels = fuel_types, colors = cols)       
+    } else {     
+      leaflet()  %>%
+        addTiles() %>%
+        setView(lng = getCenter()$Longitude, lat = getCenter()$Latitude, zoom = 15) %>%
+        addCircleMarkers(data = afs, lat = ~ Latitude, lng = ~ Longitude, popup = ~Station.Name, color = ~colors) %>%
+        addLegend(position = "bottomright", labels = fuel_types, colors = cols)
+  }})
   
   output$table <- DT::renderDataTable({
     if (nrow(subset(afs, ZIP == input$zip)) !=0) {
