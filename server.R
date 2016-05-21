@@ -4,121 +4,114 @@
 #John James
 #May 13, 2016
 
-# Libraries
-library(RCurl)
-library(curl)
-library(datasets)
-library(dplyr)
-library(jsonlite)
-library(leaflet)
-library(rjson)
-library(shiny)
-library(zipcode)
-
-#Global Variables
-## Base URL
-afsBaseURL <- "https://developer.nrel.gov/api/alt-fuel-stations/v1/nearest.json?api_key=zhiWRDbKkuL7G0Iwm2IifkfxfBeqcJ46GaHQnv5E"
-
-##User's location based upon their IP address
-ipInfo  <- getURL("ipinfo.io/loc")
-loc     <- gsub("[\n]","",ipInfo)
-
-##User's Current longitude and latitude 
-homeLat  <- strsplit(loc, ",")[[1]][1]
-homeLong <- strsplit(loc, ",")[[1]][2]
-
-##User's home URL for nearest stations
-homeURL <- paste(afsBaseURL,"&latitude=",homeLat,"&longitude=",homeLong, sep = "")
-
-## Fuel Types
-fuelTypes <- c("BD", "CNG", "E85", "ELEC", "HY", "LNG", "LPG")
-
-#Main server processing
+#Server.r
 shinyServer(function(input, output, session) {
+
+  #Format station information into stations data frame in global environment
+  formatStations <- function(afs) {
+    #Extract station fields replacing null values with NA
+    id  	    <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$id)) {return(NA)} else {return (x$id)}}))
+    name	    <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$station_name)) {return(NA)} else {return (x$station_name)}}))
+    distance	<-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$distance)) {return(NA)} else {return (x$distance)}}))
+    fuelType	<-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$fuel_type_code)) {return(NA)} else {return (x$fuel_type_code)}}))
+    address	  <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$street_address)) {return(NA)} else {return (x$street_address)}}))
+    city	    <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$city)) {return(NA)} else {return (x$city)}}))
+    state	    <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$state)) {return(NA)} else {return (x$state)}}))
+    zip	      <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$zip)) {return(NA)} else {return (x$zip)}}))
+    phone	    <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$station_phone)) {return(NA)} else {return (x$station_phone)}}))
+    hours	    <-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$access_days_time)) {return(NA)} else {return (x$access_days_time)}}))
+    latitude	<-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$latitude)) {return(NA)} else {return (x$latitude)}}))
+    longitude	<-  unlist(sapply(afs$fuel_stations, function(x) { if (is.null(x$longitude)) {return(NA)} else {return (x$longitude)}}))
+    
+    stations  <<- data.frame(id, name, distance, fuelType, address, city, state, zip, phone, hours, latitude, longitude)
+  }
+
   
-  formatSearchURL <- reactive({
+  
+  #Format search string for National Energy Laboratory API
+  formatSearchURL <- reactive ({
     
-    # Form fuel type query string option
-    if (input$BD == TRUE) { fuelTypeBD <- "&fuel_type=BD" } else {fuelTypeBD <- ""}
-    if (input$CNG == TRUE) { fuelTypeCNG <- "&fuel_type=CNG" } else {fuelTypeCNG <- ""}
-    if (input$E85 == TRUE) { fuelTypeE85 <- "&fuel_type=E85" } else {fuelTypeE85 <- ""}
-    if (input$ELEC == TRUE) { fuelTypeELEC <- "&fuel_type=ELEC" } else {fuelTypeELEC <- ""}
-    if (input$HY == TRUE) { fuelTypeHY <- "&fuel_type=HY" } else {fuelTypeHY <- ""}
-    if (input$LNG == TRUE) { fuelTypeLNG <- "&fuel_type=LNG" } else {fuelTypeLNG <- ""}
-    if (input$LPG == TRUE) { fuelTypeLPG <- "&fuel_type=LPG" } else {fuelTypeLPG <- ""}
-    
-    fuelTypeOption <- paste(fuelTypeBD, fuelTypeCNG, fuelTypeE85, fuelTypeELEC,  
-                              fuelTypeHY, fuelTypeLNG, fuelTypeLPG, sep = "")
-    
-    
-    # Format search string
-    if (input$refresh[1] == 0 | input$currentLocation == TRUE) {
-      #First time or use current location is selected
-      paste(homeURL, fuelTypeOption, sep = "")
+    #Set location parameter to that indicated by the user
+    if (input$currentLocation == TRUE) {
+      locationParameter <- paste("&latitude=",homeLat,"&longitude=",homeLong, sep = "")
     } else {
-      #Not first time, format location parameter
-      location <- gsub(" ","+",input$location)
-      paste(afsBaseURL, "&location=", location, fuelTypeOption, sep = "")
+      locationParameter <- paste("&location=",gsub(" ","+",input$location), sep = "")
+    }    
+    
+    #Set radius parameter to that indicated by the user
+    radiusParameter <- paste("&radius=", input$radius, sep = "")
+    
+    #Set fuel type option to that indicated by the user
+    if (input$fuelType == "ALL") {
+      fuelTypeParameter <- ""
+    } else {
+      fuelTypeParameter <- paste("&fuel_type=", input$fuelType, sep = "")
     }
     
+    #Concatenate and form search parameter
+    paste(afsBaseURL, locationParameter, radiusParameter, fuelTypeParameter, sep = "")
   })
-
   
-  formatStations <- function(afs){
-    name            <- unlist(sapply(afs$fuel_stations, function(x) x$station_name))
-    distance        <- unlist(sapply(afs$fuel_stations, function(x) x$distance))
-    fuelType        <- unlist(sapply(afs$fuel_stations, function(x) x$fuel_type_code))
-    address         <- unlist(sapply(afs$fuel_stations, function(x) x$street_address))
-    city            <- unlist(sapply(afs$fuel_stations, function(x) x$city))
-    state           <- unlist(sapply(afs$fuel_stations, function(x) x$state))
-    zip             <- unlist(sapply(afs$fuel_stations, function(x) x$zip))
-    phone           <- unlist(sapply(afs$fuel_stations, function(x) x$station_phone))
-    hours           <- unlist(sapply(afs$fuel_stations, function(x) x$access_days_time))
-    latitude        <- unlist(sapply(afs$fuel_stations, function(x) x$latitude))
-    longitude       <- unlist(sapply(afs$fuel_stations, function(x) x$longitude))
-    stations        <- data.frame(name, distance, fuelType, address, city, state, zip, phone, hours, latitude, longitude)
+
+  #Reads station data from National Energy Laboratory API
+  getStationData <- function() {
+    afsJSON <- getURL(formatSearchURL())
+    afs <- fromJSON(afsJSON)
   }
-  # Get alternative fuel stations based upon user's input or location
+
+
+  #Get center latitude and longitude of map display  
+  getCenter <- function() {
+    afs       <<- getStationData() 
+    stations  <<- formatStations(afs)
+
+    if (nrow(stations) == 0) {
+      center  <- data.frame(latitude = afs$latitude, longitude = afs$longitude)
+    } else {
+      center  <- data.frame(latitude = mean(stations$latitude), longitude = mean(stations$longitude))
+    }
+  }
+  
+  #Render Interactive Map
   output$m <- renderLeaflet({
     
-    # Retrieve searchURL
-    searchURL <- formatSearchURL()
-    print(searchURL)
-
-    # Get alternative fuel stations 
-    afsJSON <- getURL(searchURL)
-    afs     <- fromJSON(afsJSON)
-    
-    # Format station information
-    stations <- formatStations(afs)
-    print(stations)
+    #Get map Center 
+    center <- getCenter()
 
     #Format colors for legend
     cols <- rainbow(length(levels(stations$fuelType)), alpha = NULL)
     stations$colors <- cols[unclass(stations$fuelType)]
- 
-    #Format map
-    if (is.null(stations$latitude)) {
+    
+    #If no stations, present map centered as per user request
+    if (nrow(stations) == 0) {
       leaflet(stations)  %>%
         addTiles() %>%
-        setView(lng = afs$longitude, lat = afs$latitude, zoom = 15)
+        setView(lng = center$longitude, lat = center$latitude, zoom = 15)
+    
+    #If there is a single station, center on the single station   
+    } else if (nrow(stations) == 1){
+      leaflet(stations)  %>%
+        addTiles() %>%
+        setView(lng = stations$longitude, lat = stations$latitude, zoom = 15) %>%
+        addCircleMarkers(lat =  ~latitude, lng = ~longitude, popup = ~name, color = ~colors) %>% 
+        addLegend(position = "bottomright", labels = unique(stations$fuelType), colors = cols)
+    
+    #If there are multiple stations, center on the mean location    
     } else {
       leaflet(stations)  %>%
         addTiles() %>%
-        setView(lng = afs$longitude, lat = afs$latitude, zoom = 15) %>%
+        setView(lng = center$longitude, lat = center$latitude, zoom = 15) %>%
         fitBounds(~min(longitude), ~min(latitude), ~max(longitude), ~max(latitude)) %>%
-        addCircleMarkers(data = stations, lat =  ~latitude, lng = ~longitude, popup = ~name, color = ~colors) %>%
+        addCircleMarkers(lat =  ~latitude, lng = ~longitude, popup = ~name, color = ~colors) %>% 
         addLegend(position = "bottomright", labels = unique(stations$fuelType), colors = cols)
     }
-
   })
 
-  # output$table <- DT::renderDataTable({
-  #   if (nrow(subset(afs, ZIP == input$zip)) !=0) {
-  #     x <- subset(afs, ZIP == input$zip)
-  #   } else {
-  #     x <- subset(afs, City == input$city & State.Name == input$state)
-  #   }
-  #   DT::datatable(x[vars],options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
-  # })
+  output$table <- DT::renderDataTable({
+   afs       <<- getStationData() 
+   stations  <<- formatStations(afs)
+   if (nrow(stations) != 0) {
+      DT::datatable(stations[c(1:10)], options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
+    }
+  })
 })

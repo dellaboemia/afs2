@@ -8,7 +8,8 @@ library(shinydashboard)
 library(leaflet)
 
 header <- dashboardHeader(
-  title = "Alternative Fuel Station Finder"
+  title = "Alternative Fuel Station Finder",
+  titleWidth = 450
 )
 
 body <- dashboardBody(
@@ -20,28 +21,33 @@ body <- dashboardBody(
     ),
     column(width = 3,
            box(width = NULL, status = "warning",
-               textInput("location", label = h3("Location"), value = "Enter state, city and/or zip..."),
-               checkboxInput("currentLocation", label = "Use Current Location", value = TRUE)
-               ),
+               textInput(inputId = "location", label = "Location:", value = "ZIP or address, city, state"),
+               checkboxInput("currentLocation", label = "Use Current Location", value = TRUE),
+               sliderInput("radius", label = "Radius:", min = 0, max = 100, value = 5),
+               p(
+                 class = "text-muted",
+                 paste("Limit results to stations within a designated radius"))
+               
+           ),
            box(width = NULL, status = "warning",
-               h3("Fuel Types"),
-               checkboxInput("BD", label = "Biodiesel (B20 and above)", value = TRUE),
-               checkboxInput("CNG", label = "Compressed Natural Gas", value = TRUE),
-               checkboxInput("E85", label = "Ethanol (E85)", value = TRUE),
-               checkboxInput("ELEC", label = "Electric", value = TRUE),
-               checkboxInput("HY", label = "Hydrogen", value = TRUE),
-               checkboxInput("LNG", label = "Liquefied Natural Gas", value = TRUE),
-               checkboxInput("LPG", label = "Liquefied Petroleum Gas (Propane)", value = TRUE)               
-               ),
-           actionButton("refresh", "Render Map")
+               selectInput("fuelType", label = "Fuel Type:", choices = fuelTypeSelect, selected = "ALL"),
+               actionButton("refresh", "Render Map"),
+               p(
+                 class = "text-muted",
+                 paste("Note: Location details are subject to change. We recommend calling the stations to verify location, 
+                        hours of operation, and access.")
+                )
+          )
+      )
+  ),
+           
+  fluidRow(
+   box(title = "Alternative Fuel Station List", width = 9, status = "primary", solidHeader = TRUE,
+       DT::dataTableOutput("table")
+   )
   )
-  # fluidRow(
-  #   box(width = 9, status = "warning", 
-  #       tabPanel("Data Explorer", DT::dataTableOutput("table"))
-  #   )
-  #)
- )
 )
+
 
 dashboardPage(
   header,
