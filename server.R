@@ -100,7 +100,7 @@ shinyServer(function(input, output, session) {
       leaflet(stations)  %>%
         addTiles() %>%
         setView(lng = stations$longitude, lat = stations$latitude, zoom = 15) %>%
-        addCircleMarkers(lat =  ~latitude, lng = ~longitude, popup = ~name, color = ~colors) %>% 
+        addCircleMarkers(lat =  ~latitude, lng = ~longitude, popup = paste(stations$name," (Station Id: ",stations$id,")", sep = ""), color = ~colors) %>% 
         addLegend(position = "bottomright", labels = unique(stations$fuelType), colors = cols)
     
     #If there are multiple stations, center on the mean location    
@@ -109,7 +109,7 @@ shinyServer(function(input, output, session) {
         addTiles() %>%
         setView(lng = center$longitude, lat = center$latitude, zoom = 15) %>%
         fitBounds(~min(longitude), ~min(latitude), ~max(longitude), ~max(latitude)) %>%
-        addCircleMarkers(lat =  ~latitude, lng = ~longitude, popup = ~name, color = ~colors) %>% 
+        addCircleMarkers(lat =  ~latitude, lng = ~longitude, popup = paste(stations$name," (Station Id: ",stations$id,")", sep = ""), color = ~colors) %>% 
         addLegend(position = "bottomright", labels = unique(stations$fuelType), colors = cols)
     }
   })

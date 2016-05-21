@@ -40,11 +40,11 @@ body <- dashboardBody(
           )
       )
   ),
-           
+  
   fluidRow(
-   box(title = "Alternative Fuel Station List", width = 9, status = "primary", solidHeader = TRUE,
-       DT::dataTableOutput("table")
-   )
+    box(title = "Alternative Fuel Station List", width = 9, status = "primary", solidHeader = TRUE,
+        DT::dataTableOutput("table")
+    )
   )
 )
 
