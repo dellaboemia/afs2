@@ -26,12 +26,12 @@ body <- dashboardBody(
                sliderInput("radius", label = "Radius:", min = 0, max = 100, value = 5),
                p(
                  class = "text-muted",
-                 paste("Limit results to stations within a designated radius"))
-               
+                 paste("Limit results to stations within a designated radius (in miles)"))
+
            ),
            box(width = NULL, status = "warning",
                selectInput("fuelType", label = "Fuel Type:", choices = fuelTypeSelect, selected = "ALL"),
-               actionButton("refresh", "Render Map"),
+               selectInput("paymentType", label = "Payment Type:", choices = paymentTypeSelect, selected = "Choose"),
                p(
                  class = "text-muted",
                  paste("Note: Location details are subject to change. We recommend calling the stations to verify location, 

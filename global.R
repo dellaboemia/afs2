@@ -21,7 +21,7 @@ library(zipcode)
 ###################################################################################################
 
 ## Base URL
-afsBaseURL <- "https://developer.nrel.gov/api/alt-fuel-stations/v1/nearest.json?api_key=zhiWRDbKkuL7G0Iwm2IifkfxfBeqcJ46GaHQnv5E"
+afsBaseURL <- "https://developer.nrel.gov/api/alt-fuel-stations/v1/nearest.json?api_key=zhiWRDbKkuL7G0Iwm2IifkfxfBeqcJ46GaHQnv5E&status=E"
 
 ##User's location based upon their IP address
 ipInfo  <- getURL("ipinfo.io/loc")
@@ -35,7 +35,7 @@ homeLong <- strsplit(loc, ",")[[1]][2]
 fuelTypes <- c("BD", "CNG", "E85", "ELEC", "HY", "LNG", "LPG")
 
 ## Fuel Type Select for dropdown
-fuelTypeSelect <- c("All fuel types" = "ALL",
+fuelTypeSelect <- c("All Fuel Types" = "ALL",
                     "Biodiesel (B20 and above) (BD)" = "BD", 
                     "Compressed Natural Gas (CNG)" = "CNG",
                     "Ethanol (E85)" = "E85",
@@ -43,3 +43,27 @@ fuelTypeSelect <- c("All fuel types" = "ALL",
                     "Hydrogen (HY)" = "HY", 
                     "Liquefied Natural Gas (LNG)" = "LNG", 
                     "Liquefied Petroleum Gas (Propane) (LPG)" = "LPG")
+
+paymentTypeSelect <- c("Choose" = "Choose",
+                       "American Express" = "A",
+                       "Discover" = "D",
+                       "MasterCard" = "M",
+                       "VISA" = "V",
+                       "Cash" = "Cash",
+                       "Check" = "Checks",
+                       "Commercial Fueling Network" = "CFN",
+                       "Clean Energy" = "CleanEnergy",
+                       "Comdata" = "Comdata",
+                       "EFS" = "EFS",
+                       "Fleet One" = "FleetOne",
+                       "Fuelman" = "FuelMan",
+                       "GASCARD" = "GasCard",
+                       "PHH" = "PHH",
+                       "Pacific Pride" = "PacificPride",
+                       "Speedway" = "Speedway",
+                       "T-Chek T-Card" = "Tchek",
+                       "TCH" = "TCH",
+                       "Trillium" = "Trillium",
+                       "Voyager" = "Voyager",
+                       "WEX" = "Wright_Exp")
+                       

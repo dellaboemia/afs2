@@ -48,8 +48,15 @@ shinyServer(function(input, output, session) {
       fuelTypeParameter <- paste("&fuel_type=", input$fuelType, sep = "")
     }
     
+    #Set payment type option to that indicated by user
+    if (input$paymentType == "Choose") {
+      paymentTypeParameter <- ""
+    } else {
+      paymentTypeParameter <- paste("&cards_accepted=", input$paymentType, sep = "")
+    }
+    
     #Concatenate and form search parameter
-    paste(afsBaseURL, locationParameter, radiusParameter, fuelTypeParameter, sep = "")
+    paste(afsBaseURL, locationParameter, radiusParameter, fuelTypeParameter, paymentTypeParameter, sep = "")
   })
   
 
